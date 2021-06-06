@@ -86,8 +86,8 @@ new class {
 
   onSvgRootWheel(event) {
     const scale = 2 ** (event.deltaY / 10);
-    const viewboxWidth = this.canvasRoot.viewBox.baseVal.width * scale;
-    const viewboxHeight = this.canvasRoot.viewBox.baseVal.height * scale;
+    const viewboxWidth = Math.max(10, Math.min(window.innerWidth, this.canvasRoot.viewBox.baseVal.width * scale));
+    const viewboxHeight = this.canvasRoot.viewBox.baseVal.height / this.canvasRoot.viewBox.baseVal.width * viewboxWidth;
     const viewboxX = this.canvasRoot.viewBox.baseVal.x - (event.clientX / window.innerWidth * (viewboxWidth - this.canvasRoot.viewBox.baseVal.width));
     const viewboxY = this.canvasRoot.viewBox.baseVal.y - (event.clientY / window.innerHeight * (viewboxHeight - this.canvasRoot.viewBox.baseVal.height));
   

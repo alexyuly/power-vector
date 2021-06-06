@@ -1,0 +1,40 @@
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+  font-size: 12px;
+  margin: 0;
+  overflow: hidden;
+}
+
+#canvas-anchor {
+  display: none;
+}
+
+#context-menu {
+  background-color: #EEEEEE;
+  border: 1px solid #DDDDDD;
+  box-shadow: 1px 1px 1px #EEEEEE;
+  cursor: default;
+  display: none;
+  list-style-type: none;
+  margin: 0;
+  padding: 4px 0;
+  position: fixed;
+  user-select: none;
+  white-space: nowrap;
+}
+
+#context-menu li {
+  padding: 4px 32px 4px 16px;
+}
+
+#context-menu li:hover {
+  background-color: #DDDDDD;
+}
+
+#context-menu hr {
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid #CCCCCC;
+  margin: 4px 16px;
+}

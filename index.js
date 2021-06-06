@@ -8,6 +8,7 @@ new class {
 
     window.addEventListener('resize', this.onWindowResize.bind(this));
     document.addEventListener('contextmenu', this.onDocumentContextMenu.bind(this));
+    document.addEventListener('keydown', this.onDocumentKeyDown.bind(this))
     this.canvasRoot.addEventListener('contextmenu', this.onSvgRootContextMenu.bind(this));
     this.canvasRoot.addEventListener('pointerdown', this.onSvgRootPointerDown.bind(this));
     this.canvasRoot.addEventListener('pointermove', this.onSvgRootPointerMove.bind(this));
@@ -35,27 +36,33 @@ new class {
     event.preventDefault();
   }
 
+  onDocumentKeyDown(event) {
+    if (event.key === 'Esc' || event.key === 'Escape') {
+      this.canvasAnchor.style.display = 'none';
+      this.contextMenu.classList.remove('open');
+      this.canvasRoot.style.cursor = 'grab';
+    }
+  }
+
   onSvgRootContextMenu(event) {
     const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
 
+    this.canvasRoot.style.cursor = 'default';
     this.canvasAnchor.style.display = 'initial';
     this.canvasAnchor.setAttribute('cx', viewboxX);
     this.canvasAnchor.setAttribute('cy', viewboxY);
-    this.contextMenu.style.display = 'initial';
+    this.contextMenu.classList.add('open');
     this.contextMenu.style.left = `${event.clientX - (this.contextMenu.offsetWidth < window.innerWidth - event.clientX ? 0 : this.contextMenu.offsetWidth)}px`;
     this.contextMenu.style.top = `${event.clientY - (this.contextMenu.offsetHeight < window.innerHeight - event.clientY ? 0 : this.contextMenu.offsetHeight)}px`;
   }
 
   onSvgRootPointerDown(event) {
+    this.lastClientX = event.clientX;
+    this.lastClientY = event.clientY;
     this.canvasAnchor.style.display = 'none';
-    this.contextMenu.style.display = 'none';
-  
-    if (this.canvasRoot.style.cursor === 'grab' && !(event.button > 0)) {
-      this.canvasRoot.style.cursor = 'grabbing';
-      event.target.setPointerCapture(event.pointerId);
-      this.lastClientX = event.clientX;
-      this.lastClientY = event.clientY;
-    }
+    this.contextMenu.classList.remove('open');
+    this.canvasRoot.style.cursor = 'grabbing';
+    event.target.setPointerCapture(event.pointerId);
   }
 
   onSvgRootPointerMove(event) {
@@ -96,7 +103,7 @@ new class {
 
   onContextMenuClick() {
     this.canvasAnchor.style.display = 'none';
-    this.contextMenu.style.display = 'none';
+    this.contextMenu.classList.remove('open');
   }
 
   onAddLineClick(event) {

@@ -4,6 +4,7 @@ new class {
     this.canvasAnchor = document.getElementById('canvas-anchor');
     this.contextMenu = document.getElementById('context-menu');
     this.addLine = document.getElementById('add-line');
+    this.resetViewport = document.getElementById('reset-viewport');
 
     window.addEventListener('resize', this.onWindowResize.bind(this));
     document.addEventListener('contextmenu', this.onDocumentContextMenu.bind(this));
@@ -14,12 +15,14 @@ new class {
     this.canvasRoot.addEventListener('wheel', this.onSvgRootWheel.bind(this));
     this.contextMenu.addEventListener('click', this.onContextMenuClick.bind(this));
     this.addLine.addEventListener('click', this.onAddLineClick.bind(this));
+    this.resetViewport.addEventListener('click', this.onResetViewportClick.bind(this));
 
     this.onWindowResize();
     this.canvasRoot.style.cursor = 'grab';
   }
 
   onWindowResize() {
+    // TODO account for current viewBox
     const viewboxX = window.innerWidth / -2;
     const viewboxY = window.innerHeight / -2;
     const viewboxWidth = window.innerWidth;
@@ -30,24 +33,6 @@ new class {
 
   onDocumentContextMenu(event) {
     event.preventDefault();
-  }
-
-  onContextMenuClick() {
-    this.canvasAnchor.style.display = 'none';
-    this.contextMenu.style.display = 'none';
-  }
-
-  onAddLineClick(event) {
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
-    
-    line.setAttribute('x1', this.canvasAnchor.getAttribute('cx'));
-    line.setAttribute('y1', this.canvasAnchor.getAttribute('cy'));
-    line.setAttribute('x2', viewboxX);
-    line.setAttribute('y2', viewboxY);
-    line.setAttribute('stroke', 'black');
-    this.canvasRoot.append(line);
-    this.canvasRoot.style.cursor = 'crosshair';
   }
 
   onSvgRootContextMenu(event) {
@@ -105,6 +90,33 @@ new class {
     const viewboxHeight = this.canvasRoot.viewBox.baseVal.height * scale;
     const viewboxX = this.canvasRoot.viewBox.baseVal.x - (event.clientX / window.innerWidth * (viewboxWidth - this.canvasRoot.viewBox.baseVal.width));
     const viewboxY = this.canvasRoot.viewBox.baseVal.y - (event.clientY / window.innerHeight * (viewboxHeight - this.canvasRoot.viewBox.baseVal.height));
+  
+    this.canvasRoot.setAttribute('viewBox', `${viewboxX} ${viewboxY} ${viewboxWidth} ${viewboxHeight}`);
+  }
+
+  onContextMenuClick() {
+    this.canvasAnchor.style.display = 'none';
+    this.contextMenu.style.display = 'none';
+  }
+
+  onAddLineClick(event) {
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+    
+    line.setAttribute('x1', this.canvasAnchor.getAttribute('cx'));
+    line.setAttribute('y1', this.canvasAnchor.getAttribute('cy'));
+    line.setAttribute('x2', viewboxX);
+    line.setAttribute('y2', viewboxY);
+    line.setAttribute('stroke', 'black');
+    this.canvasRoot.append(line);
+    this.canvasRoot.style.cursor = 'crosshair';
+  }
+
+  onResetViewportClick() {
+    const viewboxX = window.innerWidth / -2;
+    const viewboxY = window.innerHeight / -2;
+    const viewboxWidth = window.innerWidth;
+    const viewboxHeight = window.innerHeight;
   
     this.canvasRoot.setAttribute('viewBox', `${viewboxX} ${viewboxY} ${viewboxWidth} ${viewboxHeight}`);
   }

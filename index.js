@@ -9,6 +9,9 @@ new class {
     const contextMenuItemAddLine = document.getElementById('context-menu-item-add-line');
     contextMenuItemAddLine.addEventListener('click', this.onContextMenuItemAddLineClick.bind(this));
 
+    const contextMenuItemAddRect = document.getElementById('context-menu-item-add-rect');
+    contextMenuItemAddRect.addEventListener('click', this.onContextMenuItemAddRectClick.bind(this));
+
     const canvasRoot = document.getElementById('canvas-root');
     canvasRoot.addEventListener('contextmenu', this.onCanvasRootContextMenu.bind(this));
     canvasRoot.addEventListener('pointerdown', this.onCanvasRootPointerDown.bind(this));
@@ -41,14 +44,14 @@ new class {
     if (event.key === 'Esc' || event.key === 'Escape') {
       const { canvasRoot, contextMenu, contextMenuAnchor } = this.elements;
       canvasRoot.style.removeProperty('cursor');
-      contextMenu.style.display = 'none';
+      contextMenu.style.removeProperty('display');
       contextMenuAnchor?.remove();
     }
   }
 
   onContextMenuClick() {
     const { contextMenu, contextMenuAnchor } = this.elements;
-    contextMenu.style.display = 'none';
+    contextMenu.style.removeProperty('display');
     contextMenuAnchor.remove();
   }
 
@@ -233,6 +236,65 @@ new class {
     canvasRoot.style.cursor = 'crosshair';
   }
 
+  onContextMenuItemAddRectClick(event) {
+    const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+    const { canvasRoot, contextMenuAnchor } = this.elements;
+    const anchorX = +contextMenuAnchor.getAttribute('cx');
+    const anchorY = +contextMenuAnchor.getAttribute('cy');
+    const x = viewboxX < anchorX ? viewboxX : anchorX;
+    const y = viewboxY < anchorY ? viewboxY : anchorY;
+    const width = Math.abs(viewboxX - anchorX);
+    const height = Math.abs(viewboxY - anchorY);
+
+    const selection = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    selection.setAttribute('x', x);
+    selection.setAttribute('y', y);
+    selection.setAttribute('width', width);
+    selection.setAttribute('height', height);
+    selection.setAttribute('fill', 'none');
+    selection.setAttribute('stroke', 'black');
+    selection.setAttribute('stroke-width', 1);
+
+    const selectionShadow = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    selectionShadow.setAttribute('x', x);
+    selectionShadow.setAttribute('y', y);
+    selectionShadow.setAttribute('width', width);
+    selectionShadow.setAttribute('height', height);
+    selectionShadow.setAttribute('fill', 'none');
+    selectionShadow.setAttribute('stroke', 'transparent');
+    selectionShadow.setAttribute('stroke-width', 5);
+
+    const selectedElementAnchor1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectedElementAnchor1.setAttribute('cx', anchorX);
+    selectedElementAnchor1.setAttribute('cy', anchorY);
+    selectedElementAnchor1.setAttribute('r', 10);
+    selectedElementAnchor1.setAttribute('fill', 'transparent');
+    selectedElementAnchor1.setAttribute('stroke', 'transparent');
+    selectedElementAnchor1.setAttribute('stroke-width', 5);
+
+    const selectedElementAnchor2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectedElementAnchor2.setAttribute('cx', viewboxX);
+    selectedElementAnchor2.setAttribute('cy', viewboxY);
+    selectedElementAnchor2.setAttribute('r', 10);
+    selectedElementAnchor2.setAttribute('fill', 'transparent');
+    selectedElementAnchor2.setAttribute('stroke', 'transparent');
+    selectedElementAnchor2.setAttribute('stroke-width', 5);
+    selectedElementAnchor2.style.stroke = 'transparent'; // Temporarily disable anchor2 hover stroke while adding the rect.
+
+    // TODO add event listeners
+
+    this.elements.selection = selection;
+    this.elements.selectionShadow = selectionShadow;
+    this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+
+    const guiOnlyGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    guiOnlyGroup.dataset.guiOnly = '';
+    guiOnlyGroup.append(selectionShadow, selectedElementAnchor1, selectedElementAnchor2);
+
+    canvasRoot.append(selection, guiOnlyGroup);
+    canvasRoot.style.cursor = 'crosshair';
+  }
+
   onCanvasRootContextMenu(event) {
     const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
     const { canvasRoot, contextMenu } = this.elements;
@@ -267,14 +329,14 @@ new class {
 
     canvasRoot.setPointerCapture(event.pointerId);
     canvasRoot.style.cursor = 'grabbing';
-    contextMenu.style.display = 'none';
+    contextMenu.style.removeProperty('display');
     contextMenuAnchor?.remove();
     this.state.clientX = event.clientX;
     this.state.clientY = event.clientY;
   }
 
   onCanvasRootPointerMove(event) {
-    const { canvasRoot } = this.elements;
+    const { canvasRoot, contextMenuAnchor } = this.elements;
 
     if (canvasRoot.style.cursor === 'grabbing') {
       const [viewboxX, viewboxY] = this.translateClientToViewbox(this.state.clientX - event.clientX, this.state.clientY - event.clientY);
@@ -284,14 +346,32 @@ new class {
     }
     else if (canvasRoot.style.cursor === 'crosshair') {
       const { selection, selectionAnchors, selectionShadow } = this.elements;
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
       if (selection?.nodeName === 'line') {
-        const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
         selection.setAttribute('x2', viewboxX);
         selection.setAttribute('y2', viewboxY);
-        selectionAnchors[1].setAttribute('cx', viewboxX);
-        selectionAnchors[1].setAttribute('cy', viewboxY);
         selectionShadow.setAttribute('x2', viewboxX);
         selectionShadow.setAttribute('y2', viewboxY);
+        selectionAnchors[1].setAttribute('cx', viewboxX);
+        selectionAnchors[1].setAttribute('cy', viewboxY);
+      }
+      else if (selection?.nodeName === 'rect') {
+        const anchorX = +contextMenuAnchor.getAttribute('cx');
+        const anchorY = +contextMenuAnchor.getAttribute('cy');
+        const x = viewboxX < anchorX ? viewboxX : anchorX;
+        const y = viewboxY < anchorY ? viewboxY : anchorY;
+        const width = Math.abs(viewboxX - anchorX);
+        const height = Math.abs(viewboxY - anchorY);
+        selection.setAttribute('x', x);
+        selection.setAttribute('y', y);
+        selection.setAttribute('width', width);
+        selection.setAttribute('height', height);
+        selectionShadow.setAttribute('x', x);
+        selectionShadow.setAttribute('y', y);
+        selectionShadow.setAttribute('width', width);
+        selectionShadow.setAttribute('height', height);
+        selectionAnchors[1].setAttribute('cx', viewboxX);
+        selectionAnchors[1].setAttribute('cy', viewboxY);
       }
     }
   }
@@ -304,10 +384,16 @@ new class {
     this.state.clientY = null;
 
     if (selection?.nodeName === 'line') {
-      selectionAnchors[0].dataset.selected = '';
-      selectionAnchors[1].style.removeProperty('stroke');
-      selectionAnchors[1].dataset.selected = '';
       selectionShadow.dataset.selected = '';
+      selectionAnchors[0].dataset.selected = '';
+      selectionAnchors[1].dataset.selected = '';
+      selectionAnchors[1].style.removeProperty('stroke');
+    }
+    else if (selection?.nodeName === 'rect') {
+      selectionShadow.dataset.selected = '';
+      selectionAnchors[0].dataset.selected = '';
+      selectionAnchors[1].dataset.selected = '';
+      selectionAnchors[1].style.removeProperty('stroke');
     }
   }
 

@@ -124,12 +124,12 @@ new class {
 
   onCanvasRootPointerDown(event) {
     const { canvasRoot, contextMenu, contextMenuAnchor } = this.elements;
+    canvasRoot.setPointerCapture(event.pointerId);
     canvasRoot.style.cursor = 'grabbing';
     contextMenu.style.display = 'none';
     contextMenuAnchor?.remove();
     this.state.clientX = event.clientX;
     this.state.clientY = event.clientY;
-    event.target.setPointerCapture(event.pointerId);
   }
 
   onCanvasRootPointerMove(event) {
@@ -156,10 +156,10 @@ new class {
 
   onCanvasRootPointerUp(event) {
     const { canvasRoot } = this.elements;
+    canvasRoot.releasePointerCapture(event.pointerId);
     canvasRoot.style.removeProperty('cursor');
     this.state.clientX = null;
     this.state.clientY = null;
-    event.target.releasePointerCapture(event.pointerId);
 
     const { selection } = this.elements;
     if (selection?.nodeName === 'line') {

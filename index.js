@@ -63,7 +63,6 @@ new class {
     selection.setAttribute('y2', viewboxY);
     selection.setAttribute('stroke', 'black');
     selection.setAttribute('stroke-width', 1);
-    this.elements.selection = selection;
 
     const selectionShadow = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     selectionShadow.setAttribute('x1', contextMenuAnchor.getAttribute('cx'));
@@ -72,8 +71,6 @@ new class {
     selectionShadow.setAttribute('y2', viewboxY);
     selectionShadow.setAttribute('stroke', 'transparent');
     selectionShadow.setAttribute('stroke-width', 5);
-    this.elements.selectionShadow = selectionShadow;
-    this.elements.selectionAnchors = [];
 
     const selectedElementAnchor1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     selectedElementAnchor1.setAttribute('cx', contextMenuAnchor.getAttribute('cx'));
@@ -82,7 +79,6 @@ new class {
     selectedElementAnchor1.setAttribute('fill', 'transparent');
     selectedElementAnchor1.setAttribute('stroke', 'transparent');
     selectedElementAnchor1.setAttribute('stroke-width', 5);
-    this.elements.selectionAnchors.push(selectedElementAnchor1);
 
     const selectedElementAnchor2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     selectedElementAnchor2.setAttribute('cx', viewboxX);
@@ -92,7 +88,142 @@ new class {
     selectedElementAnchor2.setAttribute('stroke', 'transparent');
     selectedElementAnchor2.setAttribute('stroke-width', 5);
     selectedElementAnchor2.style.stroke = 'transparent'; // Temporarily disable anchor2 hover stroke while adding the line.
-    this.elements.selectionAnchors.push(selectedElementAnchor2);
+
+    selectionShadow.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      delete this.elements.selectionAnchors?.[0].dataset.selected;
+      delete this.elements.selectionAnchors?.[1].dataset.selected;
+      selectionShadow.setPointerCapture(event.pointerId);
+      selectionShadow.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectedElementAnchor1.dataset.selected = '';
+      selectedElementAnchor2.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+      this.state.clientX = event.clientX;
+      this.state.clientY = event.clientY;
+    });
+
+    selectionShadow.addEventListener('pointermove', (event) => {
+      if (selectionShadow.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const viewboxX = canvasRoot.viewBox.baseVal.width / window.innerWidth * (this.state.clientX - event.clientX);
+      const viewboxY = canvasRoot.viewBox.baseVal.height / window.innerHeight * (this.state.clientY - event.clientY);
+      const x1 = +selection.getAttribute('x1') - viewboxX;
+      const y1 = +selection.getAttribute('y1') - viewboxY;
+      const x2 = +selection.getAttribute('x2') - viewboxX;
+      const y2 = +selection.getAttribute('y2') - viewboxY;
+      selection.setAttribute('x1', x1);
+      selection.setAttribute('y1', y1);
+      selection.setAttribute('x2', x2);
+      selection.setAttribute('y2', y2);
+      selectionShadow.setAttribute('x1', x1);
+      selectionShadow.setAttribute('y1', y1);
+      selectionShadow.setAttribute('x2', x2);
+      selectionShadow.setAttribute('y2', y2);
+      selectedElementAnchor1.setAttribute('cx', x1);
+      selectedElementAnchor1.setAttribute('cy', y1);
+      selectedElementAnchor2.setAttribute('cx', x2);
+      selectedElementAnchor2.setAttribute('cy', y2);
+      this.state.clientX = event.clientX;
+      this.state.clientY = event.clientY;
+    });
+
+    selectionShadow.addEventListener('pointerup', (event) => {
+      if (selectionShadow.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectionShadow.releasePointerCapture(event.pointerId);
+      selectionShadow.style.removeProperty('cursor');
+    });
+
+    selectedElementAnchor1.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      delete this.elements.selectionAnchors?.[0].dataset.selected;
+      delete this.elements.selectionAnchors?.[1].dataset.selected;
+      selectedElementAnchor1.setPointerCapture(event.pointerId);
+      selectedElementAnchor1.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectedElementAnchor1.dataset.selected = '';
+      selectedElementAnchor2.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+    });
+
+    selectedElementAnchor1.addEventListener('pointermove', (event) => {
+      if (selectedElementAnchor1.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+      selection.setAttribute('x1', viewboxX);
+      selection.setAttribute('y1', viewboxY);
+      selectionShadow.setAttribute('x1', viewboxX);
+      selectionShadow.setAttribute('y1', viewboxY);
+      selectedElementAnchor1.setAttribute('cx', viewboxX);
+      selectedElementAnchor1.setAttribute('cy', viewboxY);
+    });
+
+    selectedElementAnchor1.addEventListener('pointerup', (event) => {
+      if (selectedElementAnchor1.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectedElementAnchor1.releasePointerCapture(event.pointerId);
+      selectedElementAnchor1.style.removeProperty('cursor');
+    });
+
+    selectedElementAnchor2.addEventListener('pointerdown', (event) => {
+      if (canvasRoot.style.cursor === 'crosshair') {
+        return;
+      }
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      delete this.elements.selectionAnchors?.[0].dataset.selected;
+      delete this.elements.selectionAnchors?.[1].dataset.selected;
+      selectedElementAnchor2.setPointerCapture(event.pointerId);
+      selectedElementAnchor2.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectedElementAnchor1.dataset.selected = '';
+      selectedElementAnchor2.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+    });
+
+    selectedElementAnchor2.addEventListener('pointermove', (event) => {
+      if (selectedElementAnchor2.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+      selection.setAttribute('x2', viewboxX);
+      selection.setAttribute('y2', viewboxY);
+      selectionShadow.setAttribute('x2', viewboxX);
+      selectionShadow.setAttribute('y2', viewboxY);
+      selectedElementAnchor2.setAttribute('cx', viewboxX);
+      selectedElementAnchor2.setAttribute('cy', viewboxY);
+    });
+
+    selectedElementAnchor2.addEventListener('pointerup', (event) => {
+      if (selectedElementAnchor2.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectedElementAnchor2.releasePointerCapture(event.pointerId);
+      selectedElementAnchor2.style.removeProperty('cursor');
+    });
+
+    this.elements.selection = selection;
+    this.elements.selectionShadow = selectionShadow;
+    this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
 
     const guiOnlyGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     guiOnlyGroup.dataset.guiOnly = '';
@@ -123,7 +254,17 @@ new class {
   }
 
   onCanvasRootPointerDown(event) {
-    const { canvasRoot, contextMenu, contextMenuAnchor } = this.elements;
+    const { canvasRoot, contextMenu, contextMenuAnchor, selectionAnchors, selectionShadow } = this.elements;
+
+    if (canvasRoot.style.cursor !== 'crosshair') {
+      delete selectionShadow?.dataset.selected;
+      delete selectionAnchors?.[0].dataset.selected;
+      delete selectionAnchors?.[1].dataset.selected;
+      this.elements.selection = null;
+      this.elements.selectionShadow = null;
+      this.elements.selectionAnchors = null;
+    }
+
     canvasRoot.setPointerCapture(event.pointerId);
     canvasRoot.style.cursor = 'grabbing';
     contextMenu.style.display = 'none';
@@ -134,40 +275,39 @@ new class {
 
   onCanvasRootPointerMove(event) {
     const { canvasRoot } = this.elements;
+
     if (canvasRoot.style.cursor === 'grabbing') {
       const [viewboxX, viewboxY] = this.translateClientToViewbox(this.state.clientX - event.clientX, this.state.clientY - event.clientY);
       canvasRoot.setAttribute('viewBox', `${viewboxX} ${viewboxY} ${canvasRoot.viewBox.baseVal.width} ${canvasRoot.viewBox.baseVal.height}`);
       this.state.clientX = event.clientX;
       this.state.clientY = event.clientY;
-    } else if (canvasRoot.style.cursor === 'crosshair') {
-      const { selection } = this.elements;
+    }
+    else if (canvasRoot.style.cursor === 'crosshair') {
+      const { selection, selectionAnchors, selectionShadow } = this.elements;
       if (selection?.nodeName === 'line') {
         const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
-        const { selectionShadow, selectionAnchors } = this.elements;
         selection.setAttribute('x2', viewboxX);
         selection.setAttribute('y2', viewboxY);
-        selectionShadow.setAttribute('x2', viewboxX);
-        selectionShadow.setAttribute('y2', viewboxY);
         selectionAnchors[1].setAttribute('cx', viewboxX);
         selectionAnchors[1].setAttribute('cy', viewboxY);
+        selectionShadow.setAttribute('x2', viewboxX);
+        selectionShadow.setAttribute('y2', viewboxY);
       }
     }
   }
 
   onCanvasRootPointerUp(event) {
-    const { canvasRoot } = this.elements;
+    const { canvasRoot, selection, selectionAnchors, selectionShadow } = this.elements;
     canvasRoot.releasePointerCapture(event.pointerId);
     canvasRoot.style.removeProperty('cursor');
     this.state.clientX = null;
     this.state.clientY = null;
 
-    const { selection } = this.elements;
     if (selection?.nodeName === 'line') {
-      const { selectionAnchors } = this.elements;
+      selectionAnchors[0].dataset.selected = '';
       selectionAnchors[1].style.removeProperty('stroke');
-      this.elements.selection = null;
-      this.elements.selectionAnchors = null;
-      this.elements.selectionShadow = null;
+      selectionAnchors[1].dataset.selected = '';
+      selectionShadow.dataset.selected = '';
     }
   }
 
@@ -183,8 +323,9 @@ new class {
   }
 
   translateClientToViewbox(clientX, clientY) {
-    const viewboxX = this.elements.canvasRoot.viewBox.baseVal.width / window.innerWidth * clientX + this.elements.canvasRoot.viewBox.baseVal.x;
-    const viewboxY = this.elements.canvasRoot.viewBox.baseVal.height / window.innerHeight * clientY + this.elements.canvasRoot.viewBox.baseVal.y;
+    const { canvasRoot } = this.elements;
+    const viewboxX = canvasRoot.viewBox.baseVal.width / window.innerWidth * clientX + canvasRoot.viewBox.baseVal.x;
+    const viewboxY = canvasRoot.viewBox.baseVal.height / window.innerHeight * clientY + canvasRoot.viewBox.baseVal.y;
 
     return [viewboxX, viewboxY];
   }

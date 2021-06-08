@@ -15,9 +15,9 @@ body {
   cursor: crosshair;
 }
 
-#canvas-root *:hover {
+#canvas-root *:hover, #canvas-root *[data-selected] {
   stroke: #6eddff;
-  transition: stroke 0.2s;
+  transition: stroke 0.1s;
 }
 
 #context-menu {

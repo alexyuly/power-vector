@@ -26,7 +26,7 @@ new class {
       contextMenuAnchor: null,
       contextMenuItemAddLine,
       selection: null,
-      selectionAnchors: null,
+      selectionHandles: null,
       selectionShadow: null,
     };
 
@@ -75,36 +75,35 @@ new class {
     selectionShadow.setAttribute('stroke', 'transparent');
     selectionShadow.setAttribute('stroke-width', 5);
 
-    const selectedElementAnchor1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    selectedElementAnchor1.setAttribute('cx', contextMenuAnchor.getAttribute('cx'));
-    selectedElementAnchor1.setAttribute('cy', contextMenuAnchor.getAttribute('cy'));
-    selectedElementAnchor1.setAttribute('r', 10);
-    selectedElementAnchor1.setAttribute('fill', 'transparent');
-    selectedElementAnchor1.setAttribute('stroke', 'transparent');
-    selectedElementAnchor1.setAttribute('stroke-width', 5);
+    const selectionHandle1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectionHandle1.setAttribute('cx', contextMenuAnchor.getAttribute('cx'));
+    selectionHandle1.setAttribute('cy', contextMenuAnchor.getAttribute('cy'));
+    selectionHandle1.setAttribute('r', 10);
+    selectionHandle1.setAttribute('fill', 'transparent');
+    selectionHandle1.setAttribute('stroke', 'transparent');
+    selectionHandle1.setAttribute('stroke-width', 5);
 
-    const selectedElementAnchor2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    selectedElementAnchor2.setAttribute('cx', viewboxX);
-    selectedElementAnchor2.setAttribute('cy', viewboxY);
-    selectedElementAnchor2.setAttribute('r', 10);
-    selectedElementAnchor2.setAttribute('fill', 'transparent');
-    selectedElementAnchor2.setAttribute('stroke', 'transparent');
-    selectedElementAnchor2.setAttribute('stroke-width', 5);
-    selectedElementAnchor2.style.stroke = 'transparent'; // Temporarily disable anchor2 hover stroke while adding the line.
+    const selectionHandle2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectionHandle2.setAttribute('cx', viewboxX);
+    selectionHandle2.setAttribute('cy', viewboxY);
+    selectionHandle2.setAttribute('r', 10);
+    selectionHandle2.setAttribute('fill', 'transparent');
+    selectionHandle2.setAttribute('stroke', 'transparent');
+    selectionHandle2.setAttribute('stroke-width', 5);
+    selectionHandle2.style.stroke = 'transparent'; // Temporarily disable anchor2 hover stroke while adding the line.
 
     selectionShadow.addEventListener('pointerdown', (event) => {
       event.stopPropagation();
       delete this.elements.selectionShadow?.dataset.selected;
-      delete this.elements.selectionAnchors?.[0].dataset.selected;
-      delete this.elements.selectionAnchors?.[1].dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
       selectionShadow.setPointerCapture(event.pointerId);
       selectionShadow.style.cursor = 'move';
       selectionShadow.dataset.selected = '';
-      selectedElementAnchor1.dataset.selected = '';
-      selectedElementAnchor2.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
       this.elements.selection = selection;
       this.elements.selectionShadow = selectionShadow;
-      this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2];
       this.state.clientX = event.clientX;
       this.state.clientY = event.clientY;
     });
@@ -128,10 +127,10 @@ new class {
       selectionShadow.setAttribute('y1', y1);
       selectionShadow.setAttribute('x2', x2);
       selectionShadow.setAttribute('y2', y2);
-      selectedElementAnchor1.setAttribute('cx', x1);
-      selectedElementAnchor1.setAttribute('cy', y1);
-      selectedElementAnchor2.setAttribute('cx', x2);
-      selectedElementAnchor2.setAttribute('cy', y2);
+      selectionHandle1.setAttribute('cx', x1);
+      selectionHandle1.setAttribute('cy', y1);
+      selectionHandle2.setAttribute('cx', x2);
+      selectionHandle2.setAttribute('cy', y2);
       this.state.clientX = event.clientX;
       this.state.clientY = event.clientY;
     });
@@ -145,23 +144,22 @@ new class {
       selectionShadow.style.removeProperty('cursor');
     });
 
-    selectedElementAnchor1.addEventListener('pointerdown', (event) => {
+    selectionHandle1.addEventListener('pointerdown', (event) => {
       event.stopPropagation();
       delete this.elements.selectionShadow?.dataset.selected;
-      delete this.elements.selectionAnchors?.[0].dataset.selected;
-      delete this.elements.selectionAnchors?.[1].dataset.selected;
-      selectedElementAnchor1.setPointerCapture(event.pointerId);
-      selectedElementAnchor1.style.cursor = 'move';
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionHandle1.setPointerCapture(event.pointerId);
+      selectionHandle1.style.cursor = 'move';
       selectionShadow.dataset.selected = '';
-      selectedElementAnchor1.dataset.selected = '';
-      selectedElementAnchor2.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
       this.elements.selection = selection;
       this.elements.selectionShadow = selectionShadow;
-      this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2];
     });
 
-    selectedElementAnchor1.addEventListener('pointermove', (event) => {
-      if (selectedElementAnchor1.style.cursor !== 'move') {
+    selectionHandle1.addEventListener('pointermove', (event) => {
+      if (selectionHandle1.style.cursor !== 'move') {
         return;
       }
       event.stopPropagation();
@@ -170,39 +168,38 @@ new class {
       selection.setAttribute('y1', viewboxY);
       selectionShadow.setAttribute('x1', viewboxX);
       selectionShadow.setAttribute('y1', viewboxY);
-      selectedElementAnchor1.setAttribute('cx', viewboxX);
-      selectedElementAnchor1.setAttribute('cy', viewboxY);
+      selectionHandle1.setAttribute('cx', viewboxX);
+      selectionHandle1.setAttribute('cy', viewboxY);
     });
 
-    selectedElementAnchor1.addEventListener('pointerup', (event) => {
-      if (selectedElementAnchor1.style.cursor !== 'move') {
+    selectionHandle1.addEventListener('pointerup', (event) => {
+      if (selectionHandle1.style.cursor !== 'move') {
         return;
       }
       event.stopPropagation();
-      selectedElementAnchor1.releasePointerCapture(event.pointerId);
-      selectedElementAnchor1.style.removeProperty('cursor');
+      selectionHandle1.releasePointerCapture(event.pointerId);
+      selectionHandle1.style.removeProperty('cursor');
     });
 
-    selectedElementAnchor2.addEventListener('pointerdown', (event) => {
+    selectionHandle2.addEventListener('pointerdown', (event) => {
       if (canvasRoot.style.cursor === 'crosshair') {
         return;
       }
       event.stopPropagation();
       delete this.elements.selectionShadow?.dataset.selected;
-      delete this.elements.selectionAnchors?.[0].dataset.selected;
-      delete this.elements.selectionAnchors?.[1].dataset.selected;
-      selectedElementAnchor2.setPointerCapture(event.pointerId);
-      selectedElementAnchor2.style.cursor = 'move';
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionHandle2.setPointerCapture(event.pointerId);
+      selectionHandle2.style.cursor = 'move';
       selectionShadow.dataset.selected = '';
-      selectedElementAnchor1.dataset.selected = '';
-      selectedElementAnchor2.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
       this.elements.selection = selection;
       this.elements.selectionShadow = selectionShadow;
-      this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2];
     });
 
-    selectedElementAnchor2.addEventListener('pointermove', (event) => {
-      if (selectedElementAnchor2.style.cursor !== 'move') {
+    selectionHandle2.addEventListener('pointermove', (event) => {
+      if (selectionHandle2.style.cursor !== 'move') {
         return;
       }
       event.stopPropagation();
@@ -211,26 +208,26 @@ new class {
       selection.setAttribute('y2', viewboxY);
       selectionShadow.setAttribute('x2', viewboxX);
       selectionShadow.setAttribute('y2', viewboxY);
-      selectedElementAnchor2.setAttribute('cx', viewboxX);
-      selectedElementAnchor2.setAttribute('cy', viewboxY);
+      selectionHandle2.setAttribute('cx', viewboxX);
+      selectionHandle2.setAttribute('cy', viewboxY);
     });
 
-    selectedElementAnchor2.addEventListener('pointerup', (event) => {
-      if (selectedElementAnchor2.style.cursor !== 'move') {
+    selectionHandle2.addEventListener('pointerup', (event) => {
+      if (selectionHandle2.style.cursor !== 'move') {
         return;
       }
       event.stopPropagation();
-      selectedElementAnchor2.releasePointerCapture(event.pointerId);
-      selectedElementAnchor2.style.removeProperty('cursor');
+      selectionHandle2.releasePointerCapture(event.pointerId);
+      selectionHandle2.style.removeProperty('cursor');
     });
 
     this.elements.selection = selection;
     this.elements.selectionShadow = selectionShadow;
-    this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+    this.elements.selectionHandles = [selectionHandle1, selectionHandle2];
 
     const guiOnlyGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     guiOnlyGroup.dataset.guiOnly = '';
-    guiOnlyGroup.append(selectionShadow, selectedElementAnchor1, selectedElementAnchor2);
+    guiOnlyGroup.append(selectionShadow, ...this.elements.selectionHandles);
 
     canvasRoot.append(selection, guiOnlyGroup);
     canvasRoot.style.cursor = 'crosshair';
@@ -264,32 +261,307 @@ new class {
     selectionShadow.setAttribute('stroke', 'transparent');
     selectionShadow.setAttribute('stroke-width', 5);
 
-    const selectedElementAnchor1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    selectedElementAnchor1.setAttribute('cx', anchorX);
-    selectedElementAnchor1.setAttribute('cy', anchorY);
-    selectedElementAnchor1.setAttribute('r', 10);
-    selectedElementAnchor1.setAttribute('fill', 'transparent');
-    selectedElementAnchor1.setAttribute('stroke', 'transparent');
-    selectedElementAnchor1.setAttribute('stroke-width', 5);
+    const selectionHandle1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectionHandle1.setAttribute('cx', viewboxX);
+    selectionHandle1.setAttribute('cy', anchorY);
+    selectionHandle1.setAttribute('r', 10);
+    selectionHandle1.setAttribute('fill', 'transparent');
+    selectionHandle1.setAttribute('stroke', 'transparent');
+    selectionHandle1.setAttribute('stroke-width', 5);
 
-    const selectedElementAnchor2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    selectedElementAnchor2.setAttribute('cx', viewboxX);
-    selectedElementAnchor2.setAttribute('cy', viewboxY);
-    selectedElementAnchor2.setAttribute('r', 10);
-    selectedElementAnchor2.setAttribute('fill', 'transparent');
-    selectedElementAnchor2.setAttribute('stroke', 'transparent');
-    selectedElementAnchor2.setAttribute('stroke-width', 5);
-    selectedElementAnchor2.style.stroke = 'transparent'; // Temporarily disable anchor2 hover stroke while adding the rect.
+    const selectionHandle2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectionHandle2.setAttribute('cx', anchorX);
+    selectionHandle2.setAttribute('cy', viewboxY);
+    selectionHandle2.setAttribute('r', 10);
+    selectionHandle2.setAttribute('fill', 'transparent');
+    selectionHandle2.setAttribute('stroke', 'transparent');
+    selectionHandle2.setAttribute('stroke-width', 5);
 
-    // TODO add event listeners
+    const selectionHandle3 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectionHandle3.setAttribute('cx', anchorX);
+    selectionHandle3.setAttribute('cy', anchorY);
+    selectionHandle3.setAttribute('r', 10);
+    selectionHandle3.setAttribute('fill', 'transparent');
+    selectionHandle3.setAttribute('stroke', 'transparent');
+    selectionHandle3.setAttribute('stroke-width', 5);
+
+    const selectionHandle4 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    selectionHandle4.setAttribute('cx', viewboxX);
+    selectionHandle4.setAttribute('cy', viewboxY);
+    selectionHandle4.setAttribute('r', 10);
+    selectionHandle4.setAttribute('fill', 'transparent');
+    selectionHandle4.setAttribute('stroke', 'transparent');
+    selectionHandle4.setAttribute('stroke-width', 5);
+    selectionHandle4.style.stroke = 'transparent'; // Temporarily disable anchor4 hover stroke while adding the rect.
+
+    selectionShadow.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionShadow.setPointerCapture(event.pointerId);
+      selectionShadow.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
+      selectionHandle3.dataset.selected = '';
+      selectionHandle4.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2, selectionHandle3, selectionHandle4];
+      this.state.clientX = event.clientX;
+      this.state.clientY = event.clientY;
+    });
+
+    selectionShadow.addEventListener('pointermove', (event) => {
+      if (selectionShadow.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const viewboxX = canvasRoot.viewBox.baseVal.width / window.innerWidth * (this.state.clientX - event.clientX);
+      const viewboxY = canvasRoot.viewBox.baseVal.height / window.innerHeight * (this.state.clientY - event.clientY);
+      const x = +selection.getAttribute('x') - viewboxX;
+      const y = +selection.getAttribute('y') - viewboxY;
+      const width = +selection.getAttribute('width');
+      const height = +selection.getAttribute('height');
+      selection.setAttribute('x', x);
+      selection.setAttribute('y', y);
+      selectionShadow.setAttribute('x', x);
+      selectionShadow.setAttribute('y', y);
+      selectionHandle1.setAttribute('cx', x + width);
+      selectionHandle1.setAttribute('cy', y);
+      selectionHandle2.setAttribute('cx', x);
+      selectionHandle2.setAttribute('cy', y + height);
+      selectionHandle3.setAttribute('cx', x);
+      selectionHandle3.setAttribute('cy', y);
+      selectionHandle4.setAttribute('cx', x + width);
+      selectionHandle4.setAttribute('cy', y + height);
+      this.state.clientX = event.clientX;
+      this.state.clientY = event.clientY;
+    });
+
+    selectionShadow.addEventListener('pointerup', (event) => {
+      if (selectionShadow.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectionShadow.releasePointerCapture(event.pointerId);
+      selectionShadow.style.removeProperty('cursor');
+    });
+
+    selectionHandle1.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionHandle1.setPointerCapture(event.pointerId);
+      selectionHandle1.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
+      selectionHandle3.dataset.selected = '';
+      selectionHandle4.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2, selectionHandle3, selectionHandle4];
+    });
+
+    selectionHandle1.addEventListener('pointermove', (event) => {
+      if (selectionHandle1.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+      const isLeftHand = viewboxX < selectionHandle3.getAttribute('cx');
+      const isUpperHand = viewboxY < selectionHandle4.getAttribute('cy');
+      const x = isLeftHand ? viewboxX : +selectionHandle2.getAttribute('cx');
+      const y = isUpperHand ? viewboxY : +selectionHandle2.getAttribute('cy');
+      const width = Math.abs(+selectionHandle2.getAttribute('cx') - viewboxX);
+      const height = Math.abs(+selectionHandle2.getAttribute('cy') - viewboxY);
+      selection.setAttribute('x', x);
+      selection.setAttribute('y', y);
+      selection.setAttribute('width', width);
+      selection.setAttribute('height', height);
+      selectionShadow.setAttribute('x', x);
+      selectionShadow.setAttribute('y', y);
+      selectionShadow.setAttribute('width', width);
+      selectionShadow.setAttribute('height', height);
+      selectionHandle3.setAttribute('cy', viewboxY);
+      selectionHandle4.setAttribute('cx', viewboxX);
+      selectionHandle1.setAttribute('cx', viewboxX);
+      selectionHandle1.setAttribute('cy', viewboxY);
+    });
+
+    selectionHandle1.addEventListener('pointerup', (event) => {
+      if (selectionHandle1.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectionHandle1.releasePointerCapture(event.pointerId);
+      selectionHandle1.style.removeProperty('cursor');
+    });
+
+    selectionHandle2.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionHandle2.setPointerCapture(event.pointerId);
+      selectionHandle2.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
+      selectionHandle3.dataset.selected = '';
+      selectionHandle4.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2, selectionHandle3, selectionHandle4];
+    });
+
+    selectionHandle2.addEventListener('pointermove', (event) => {
+      if (selectionHandle2.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+      const isLeftHand = viewboxX < selectionHandle4.getAttribute('cx');
+      const isUpperHand = viewboxY < selectionHandle3.getAttribute('cy');
+      const x = isLeftHand ? viewboxX : +selectionHandle1.getAttribute('cx');
+      const y = isUpperHand ? viewboxY : +selectionHandle1.getAttribute('cy');
+      const width = Math.abs(+selectionHandle1.getAttribute('cx') - viewboxX);
+      const height = Math.abs(+selectionHandle1.getAttribute('cy') - viewboxY);
+      selection.setAttribute('x', x);
+      selection.setAttribute('y', y);
+      selection.setAttribute('width', width);
+      selection.setAttribute('height', height);
+      selectionShadow.setAttribute('x', x);
+      selectionShadow.setAttribute('y', y);
+      selectionShadow.setAttribute('width', width);
+      selectionShadow.setAttribute('height', height);
+      selectionHandle3.setAttribute('cx', viewboxX);
+      selectionHandle4.setAttribute('cy', viewboxY);
+      selectionHandle2.setAttribute('cx', viewboxX);
+      selectionHandle2.setAttribute('cy', viewboxY);
+    });
+
+    selectionHandle2.addEventListener('pointerup', (event) => {
+      if (selectionHandle2.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectionHandle2.releasePointerCapture(event.pointerId);
+      selectionHandle2.style.removeProperty('cursor');
+    });
+
+    selectionHandle3.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionHandle3.setPointerCapture(event.pointerId);
+      selectionHandle3.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
+      selectionHandle3.dataset.selected = '';
+      selectionHandle4.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2, selectionHandle3, selectionHandle4];
+    });
+
+    selectionHandle3.addEventListener('pointermove', (event) => {
+      if (selectionHandle3.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+      const isLeftHand = viewboxX < selectionHandle1.getAttribute('cx');
+      const isUpperHand = viewboxY < selectionHandle2.getAttribute('cy');
+      const x = isLeftHand ? viewboxX : +selectionHandle4.getAttribute('cx');
+      const y = isUpperHand ? viewboxY : +selectionHandle4.getAttribute('cy');
+      const width = Math.abs(+selectionHandle4.getAttribute('cx') - viewboxX);
+      const height = Math.abs(+selectionHandle4.getAttribute('cy') - viewboxY);
+      selection.setAttribute('x', x);
+      selection.setAttribute('y', y);
+      selection.setAttribute('width', width);
+      selection.setAttribute('height', height);
+      selectionShadow.setAttribute('x', x);
+      selectionShadow.setAttribute('y', y);
+      selectionShadow.setAttribute('width', width);
+      selectionShadow.setAttribute('height', height);
+      selectionHandle1.setAttribute('cy', viewboxY);
+      selectionHandle2.setAttribute('cx', viewboxX);
+      selectionHandle3.setAttribute('cx', viewboxX);
+      selectionHandle3.setAttribute('cy', viewboxY);
+    });
+
+    selectionHandle3.addEventListener('pointerup', (event) => {
+      if (selectionHandle3.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectionHandle3.releasePointerCapture(event.pointerId);
+      selectionHandle3.style.removeProperty('cursor');
+    });
+
+    selectionHandle4.addEventListener('pointerdown', (event) => {
+      if (canvasRoot.style.cursor === 'crosshair') {
+        return;
+      }
+      event.stopPropagation();
+      delete this.elements.selectionShadow?.dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
+      selectionHandle4.setPointerCapture(event.pointerId);
+      selectionHandle4.style.cursor = 'move';
+      selectionShadow.dataset.selected = '';
+      selectionHandle1.dataset.selected = '';
+      selectionHandle2.dataset.selected = '';
+      selectionHandle3.dataset.selected = '';
+      selectionHandle4.dataset.selected = '';
+      this.elements.selection = selection;
+      this.elements.selectionShadow = selectionShadow;
+      this.elements.selectionHandles = [selectionHandle1, selectionHandle2, selectionHandle3, selectionHandle4];
+    });
+
+    selectionHandle4.addEventListener('pointermove', (event) => {
+      if (selectionHandle4.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
+      const isLeftHand = viewboxX < selectionHandle2.getAttribute('cx');
+      const isUpperHand = viewboxY < selectionHandle1.getAttribute('cy');
+      const x = isLeftHand ? viewboxX : +selectionHandle3.getAttribute('cx');
+      const y = isUpperHand ? viewboxY : +selectionHandle3.getAttribute('cy');
+      const width = Math.abs(+selectionHandle3.getAttribute('cx') - viewboxX);
+      const height = Math.abs(+selectionHandle3.getAttribute('cy') - viewboxY);
+      selection.setAttribute('x', x);
+      selection.setAttribute('y', y);
+      selection.setAttribute('width', width);
+      selection.setAttribute('height', height);
+      selectionShadow.setAttribute('x', x);
+      selectionShadow.setAttribute('y', y);
+      selectionShadow.setAttribute('width', width);
+      selectionShadow.setAttribute('height', height);
+      selectionHandle1.setAttribute('cx', viewboxX);
+      selectionHandle2.setAttribute('cy', viewboxY);
+      selectionHandle4.setAttribute('cx', viewboxX);
+      selectionHandle4.setAttribute('cy', viewboxY);
+    });
+
+    selectionHandle4.addEventListener('pointerup', (event) => {
+      if (selectionHandle4.style.cursor !== 'move') {
+        return;
+      }
+      event.stopPropagation();
+      selectionHandle4.releasePointerCapture(event.pointerId);
+      selectionHandle4.style.removeProperty('cursor');
+    });
 
     this.elements.selection = selection;
     this.elements.selectionShadow = selectionShadow;
-    this.elements.selectionAnchors = [selectedElementAnchor1, selectedElementAnchor2];
+    this.elements.selectionHandles = [selectionHandle1, selectionHandle2, selectionHandle3, selectionHandle4];
 
     const guiOnlyGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     guiOnlyGroup.dataset.guiOnly = '';
-    guiOnlyGroup.append(selectionShadow, selectedElementAnchor1, selectedElementAnchor2);
+    guiOnlyGroup.append(selectionShadow, ...this.elements.selectionHandles);
 
     canvasRoot.append(selection, guiOnlyGroup);
     canvasRoot.style.cursor = 'crosshair';
@@ -316,15 +588,14 @@ new class {
   }
 
   onCanvasRootPointerDown(event) {
-    const { canvasRoot, contextMenu, contextMenuAnchor, selectionAnchors, selectionShadow } = this.elements;
+    const { canvasRoot, contextMenu, contextMenuAnchor, selectionHandles, selectionShadow } = this.elements;
 
     if (canvasRoot.style.cursor !== 'crosshair') {
       delete selectionShadow?.dataset.selected;
-      delete selectionAnchors?.[0].dataset.selected;
-      delete selectionAnchors?.[1].dataset.selected;
+      this.elements.selectionHandles?.forEach(el => { delete el.dataset.selected; });
       this.elements.selection = null;
       this.elements.selectionShadow = null;
-      this.elements.selectionAnchors = null;
+      this.elements.selectionHandles = null;
     }
 
     canvasRoot.setPointerCapture(event.pointerId);
@@ -343,19 +614,17 @@ new class {
       canvasRoot.setAttribute('viewBox', `${viewboxX} ${viewboxY} ${canvasRoot.viewBox.baseVal.width} ${canvasRoot.viewBox.baseVal.height}`);
       this.state.clientX = event.clientX;
       this.state.clientY = event.clientY;
-    }
-    else if (canvasRoot.style.cursor === 'crosshair') {
-      const { selection, selectionAnchors, selectionShadow } = this.elements;
+    } else if (canvasRoot.style.cursor === 'crosshair') {
+      const { selection, selectionHandles, selectionShadow } = this.elements;
       const [viewboxX, viewboxY] = this.translateClientToViewbox(event.clientX, event.clientY);
       if (selection?.nodeName === 'line') {
         selection.setAttribute('x2', viewboxX);
         selection.setAttribute('y2', viewboxY);
         selectionShadow.setAttribute('x2', viewboxX);
         selectionShadow.setAttribute('y2', viewboxY);
-        selectionAnchors[1].setAttribute('cx', viewboxX);
-        selectionAnchors[1].setAttribute('cy', viewboxY);
-      }
-      else if (selection?.nodeName === 'rect') {
+        selectionHandles[1].setAttribute('cx', viewboxX);
+        selectionHandles[1].setAttribute('cy', viewboxY);
+      } else if (selection?.nodeName === 'rect') {
         const anchorX = +contextMenuAnchor.getAttribute('cx');
         const anchorY = +contextMenuAnchor.getAttribute('cy');
         const x = viewboxX < anchorX ? viewboxX : anchorX;
@@ -370,14 +639,16 @@ new class {
         selectionShadow.setAttribute('y', y);
         selectionShadow.setAttribute('width', width);
         selectionShadow.setAttribute('height', height);
-        selectionAnchors[1].setAttribute('cx', viewboxX);
-        selectionAnchors[1].setAttribute('cy', viewboxY);
+        selectionHandles[0].setAttribute('cx', viewboxX);
+        selectionHandles[1].setAttribute('cy', viewboxY);
+        selectionHandles[3].setAttribute('cx', viewboxX);
+        selectionHandles[3].setAttribute('cy', viewboxY);
       }
     }
   }
 
   onCanvasRootPointerUp(event) {
-    const { canvasRoot, selection, selectionAnchors, selectionShadow } = this.elements;
+    const { canvasRoot, selection, selectionHandles, selectionShadow } = this.elements;
     canvasRoot.releasePointerCapture(event.pointerId);
     canvasRoot.style.removeProperty('cursor');
     this.state.clientX = null;
@@ -385,22 +656,19 @@ new class {
 
     if (selection?.nodeName === 'line') {
       selectionShadow.dataset.selected = '';
-      selectionAnchors[0].dataset.selected = '';
-      selectionAnchors[1].dataset.selected = '';
-      selectionAnchors[1].style.removeProperty('stroke');
-    }
-    else if (selection?.nodeName === 'rect') {
+      selectionHandles.forEach(el => { el.dataset.selected = ''; });
+      selectionHandles[1].style.removeProperty('stroke');
+    } else if (selection?.nodeName === 'rect') {
       selectionShadow.dataset.selected = '';
-      selectionAnchors[0].dataset.selected = '';
-      selectionAnchors[1].dataset.selected = '';
-      selectionAnchors[1].style.removeProperty('stroke');
+      selectionHandles.forEach(el => { el.dataset.selected = ''; });
+      selectionHandles[3].style.removeProperty('stroke');
     }
   }
 
   onCanvasRootWheel(event) {
     const { canvasRoot } = this.elements;
     const scale = 2 ** (event.deltaY / 10);
-    const viewboxWidth = Math.max(10, Math.min(window.innerWidth, canvasRoot.viewBox.baseVal.width * scale));
+    const viewboxWidth = Math.max(10, Math.min(Math.max(10000, window.innerWidth), canvasRoot.viewBox.baseVal.width * scale));
     const viewboxHeight = canvasRoot.viewBox.baseVal.height / canvasRoot.viewBox.baseVal.width * viewboxWidth;
     const viewboxX = canvasRoot.viewBox.baseVal.x - (event.clientX / window.innerWidth * (viewboxWidth - canvasRoot.viewBox.baseVal.width));
     const viewboxY = canvasRoot.viewBox.baseVal.y - (event.clientY / window.innerHeight * (viewboxHeight - canvasRoot.viewBox.baseVal.height));
